@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - 27017:27017
+    volumes:
+      - photos_data:/data/db
+    networks:
+      - srservices
+
+  photos_api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: photos_api
+    ports:
+      - 8080:8080
+      - 8081:8081
+    networks:
+      - srservices
+    depends_on:
+      - mongo
+
+  photos_client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: photos_client
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+      - type: volume
+        source: node_modules
+        target: /app/node_modules
+    ports:
+      - 3000:80
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - srservices
+    depends_on:
+      - photos_api
+      - mongo
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8082:8081
+    networks:
+      - srservices
+    depends_on:
+      - photos_api
+      - mongo
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+
+networks:
+  srservices:
+    driver: bridge
+
+volumes:
+  photos_data:
+  node_modules:
