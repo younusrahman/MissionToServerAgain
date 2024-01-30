@@ -127,3 +127,4 @@ dist
 .pnp.*
 api/bin
 client/dist
+api/.vs/api/FileContentIndex/8c742f2b-71d3-486b-a53e-d53b936190e9.vsidx
